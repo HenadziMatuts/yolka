@@ -1,13 +1,15 @@
 # yolka
 Christmas tree in linux terminal.
 
-## Installation and runing
+## Build & Run
 Simply type `make` and then `./yolka` in your teminal.
+It could be customized a little bit via command line interface.
+To get usage information type `./yolka --help`.
 
 ## Demo
 This is how it looks like:
 
-![](https://media.giphy.com/media/3oFzmswfvpuUal4V8Y/giphy.gif)
+![](https://media.giphy.com/media/l0HUgTsh99uvxhEA0/giphy.gif)
  
- ## TODO
- Implement some CLI to set up parametres.
+## TODO
+Implement more customization.
