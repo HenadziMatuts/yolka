@@ -9,7 +9,7 @@ To get usage information type `./yolka --help`.
 ## Demo
 This is how it looks like:
 
-![](https://media.giphy.com/media/l0HUgTsh99uvxhEA0/giphy.gif)
+![](https://media.giphy.com/media/l49JSRzpeSKgInvRC/giphy.gif)
  
 ## TODO
 Implement more customization.

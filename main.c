@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <getopt.h>
 
 /*
               /\
@@ -35,7 +36,9 @@
 
 typedef enum drawables_t
 {
-	BACKGROUND = 0,
+	TEXT = 0,
+
+	BACKGROUND = 160,
 	TREE_OUTLINE_SLASH,
 	TREE_OUTLINE_BACKSLASH,
 	TREE_OUTLINE_UNDERSCORE,
@@ -45,6 +48,12 @@ typedef enum drawables_t
 	TREE_TRUNK_UDERSCORE,
 	TREE_TOP_LEFT,
 	TREE_TOP_RIGHT,
+
+	TREE_PEEK_FRAME_1_LEFT,
+	TREE_PEEK_FRAME_1_RIGHT,
+	TREE_PEEK_FRAME_2,
+	TREE_PEEK_FRAME_3,
+	TREE_PEEK_FRAME_4,
 
 	LED_RED,
 	LED_GREEN,
@@ -60,6 +69,7 @@ typedef enum layers_t
 	LAYERS_TREE = 0,
 	LAYERS_SNOW,
 	LAYERS_LED,
+	LAYERS_TEXT,
 	LAYERS_TOTAL
 
 } layers_t;
@@ -68,12 +78,16 @@ drawables_t **layers[LAYERS_TOTAL];
 
 int cascades = 3;
 int first_cascade_height = 3;
+char *greeting = "";
+
 int *cascade_heights = NULL;
 
 int width = 0;
 int height = 11;
 
 int snowdrift_height_cap = 3;
+
+int frame = 0;
 
 const char* drawables_to_string(drawables_t drawable)
 {
@@ -87,8 +101,13 @@ const char* drawables_to_string(drawables_t drawable)
 		case TREE_INLINE:             return GREEN"\u00b7";
 		case TREE_TRUNK_PIPE:         return RED"|";
 		case TREE_TRUNK_UDERSCORE:    return RED"_";
-		case TREE_TOP_LEFT:           return YELLOW"}";
-		case TREE_TOP_RIGHT:          return YELLOW"{";
+
+		case TREE_PEEK_FRAME_1_LEFT:  return YELLOW"}";
+		case TREE_PEEK_FRAME_1_RIGHT: return YELLOW"{";
+		case TREE_PEEK_FRAME_2:       return YELLOW"\\";
+		case TREE_PEEK_FRAME_3:       return YELLOW"=";
+		case TREE_PEEK_FRAME_4:       return YELLOW"/";
+		
 		case LED_RED:                 return BRIGHT_RED"\u2218";
 		case LED_GREEN:               return BRIGHT_GREEN"\u2218";
 		case LED_YELLOW:              return BRIGHT_YELLOW"\u2218";
@@ -111,6 +130,7 @@ void render()
 	drawables_t **tree = layers[LAYERS_TREE];
 	drawables_t **snow = layers[LAYERS_SNOW];
 	drawables_t **led = layers[LAYERS_LED];
+	drawables_t **text = layers[LAYERS_TEXT];
 
 	for (int i = 0; i < height; i++)
 	{
@@ -119,7 +139,11 @@ void render()
 
 		for (int j = 0; j < width; j++)
 		{
-			if (snow[i][j] != BACKGROUND)
+			if (text[i][j] != BACKGROUND)
+			{
+				fprintf(stdout, "%s%c", BRIGHT_YELLOW, greeting[text[i][j]]);
+			}
+			else if (snow[i][j] != BACKGROUND)
 			{
 				/* snow layer on top */
 				fprintf(stdout, "%s", drawables_to_string(snow[i][j]));
@@ -144,21 +168,14 @@ void render()
 
 void update_led_layer()
 {
-	static int frames = 0;
 	drawables_t **led = layers[LAYERS_LED];
-
-	if (frames < 3)
-	{
-		frames++;
-		return;
-	}
-	else
-	{
-		frames = 0;
-	}
-
 	drawables_t base = led[0][3];
 	drawables_t top, middle, bottom;
+
+	if (frame % 4)
+	{
+		return;
+	}
 
 	switch (base)
 	{
@@ -287,10 +304,67 @@ void update_snow_layer()
 	}
 }
 
+void update_tree_layer()
+{
+	if (frame % 3)
+	{
+		return;
+	}
+
+	int peek = 7, center = (width / 2);
+
+	drawables_t **tree = layers[LAYERS_TREE];
+	drawables_t base = tree[peek][center];
+
+	switch(base)
+	{
+		case TREE_PEEK_FRAME_1_RIGHT:
+			tree[peek][center] =
+				tree[peek][center - 1] = TREE_PEEK_FRAME_2;
+			break;
+
+		case TREE_PEEK_FRAME_2:
+			tree[peek][center] =
+				tree[peek][center - 1] = TREE_PEEK_FRAME_3;
+			break;
+
+		case TREE_PEEK_FRAME_3:
+			tree[peek][center] =
+				tree[peek][center - 1] = TREE_PEEK_FRAME_4;
+			break;
+
+		case TREE_PEEK_FRAME_4:
+			tree[peek][center] = TREE_PEEK_FRAME_1_RIGHT;
+			tree[peek][center - 1] = TREE_PEEK_FRAME_1_LEFT;
+			break;
+	}
+}
+
 void update()
 {
+	frame++;
+
+	update_tree_layer();
 	update_snow_layer();
 	update_led_layer();
+}
+
+void initialize_text_layer()
+{
+	drawables_t **text = layers[LAYERS_TEXT];
+	size_t len;
+
+	if (!(len = strlen(greeting)))
+	{
+		return;
+	}
+
+	int left_edge = (width - len) / 2;
+
+	for(size_t i = 0; i < len; i++)
+	{
+		text[3][left_edge++] = i;
+	}
 }
 
 void initialize_led_layer()
@@ -339,8 +413,8 @@ void initialize_tree_layer()
 
 	drawables_t **tree = layers[LAYERS_TREE];
 
-	tree[curr_height - 1][center - 1] = TREE_TOP_LEFT;
-	tree[curr_height - 1][center] = TREE_TOP_RIGHT;
+	tree[curr_height - 1][center - 1] = TREE_PEEK_FRAME_1_LEFT;
+	tree[curr_height - 1][center] = TREE_PEEK_FRAME_1_RIGHT;
 
 	for(int i = 0; i < cascades;)
 	{
@@ -404,6 +478,18 @@ void initialize_tree_layer()
 	}
 }
 
+void help()
+{
+	fprintf(stdout,
+		"Yolka. Author: Henadzi Matuts, 2017-2018.\n"
+		"usage:\n"
+		"\tyolka [--help|-h] [--cascades|-c num] [--height|-h num] [--greeting|-g text]\n"
+		"\t\"cascades\" stands for amount of tree cascades, default: 3\n"
+		"\t\"height\" stands for first cascade height, default: 3, min: 3\n"
+		"\t\"greeting\" length is limited to \"screen\" width minus two (160 chracters max)\n\n"
+		"***Happy 2018 Year!***\n");
+}
+
 void initialize()
 {
 	srand(time(NULL));
@@ -415,7 +501,7 @@ void initialize()
 	for(int i = 1; i < cascades; i++)
 	{
 		cascade_heights[i] =
-			cascade_heights[i - 1] + (rand() % 3) + 1;
+			cascade_heights[i - 1] + 3;
 	}
 
 	/* "screen" width and height */
@@ -428,75 +514,95 @@ void initialize()
 		width -= 1;
 	}
 
+	if (strlen(greeting) > width - 2)
+	{
+		help();
+		exit(1);
+	}
+
 	for (int i = 0; i < LAYERS_TOTAL; i++)
 	{
 		layers[i] = (drawables_t**)malloc(height * sizeof(drawables_t*));
 		for (int j = 0; j < height; j++)
 		{
 			layers[i][j] = (drawables_t*)calloc(width, sizeof(drawables_t));
+			for (int k = 0; k < width; k++)
+			{
+				layers[i][j][k] = BACKGROUND;
+			}
 		}
 	}
 
 	initialize_tree_layer();
 	initialize_snow_layer();
 	initialize_led_layer();
+	initialize_text_layer();
 }
 
 #define MAIN_LOOP while(1)
 #define DELAY_USEC 75000
 
-void show_help()
-{
-	fprintf(stdout,
-		"Yolka. Author: Henadzi Matuts, 2017-2018.\n"
-		"usage:\n"
-		"\tyolka [--help|-h] [--cascades|-c num] [--height|-h num]\n"
-		"\t\"cascades\" stands for amount of tree cascades, default: 3\n"
-		"\t\"height\" stands for first cascade height, default: 3, min: 3\n\n"
-		"Happy 2018 Year!\n");
-}
+static struct option options[] = {
+	{"help", no_argument, NULL, 'h'},
+	{"cascades", required_argument, NULL, 'c'},
+	{"height", required_argument, NULL, 'H'},
+	{"greeting", required_argument, NULL, 'g'},
+	{0, 0, 0, 0},
+};
 
-void parse_arguments(int argc, char *argv[])
+static const char *optstring = "hc:H:g:";
+
+void parse_options(int argc, char *argv[])
 {
-	for (int i = 1; i < argc; i++)
+	while (1)
 	{
-		if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h"))
+		switch (getopt_long(argc, argv, optstring, options, NULL))
 		{
-			show_help();
+		case EOF:
+			break;
+
+		case 'h':
+			help();
 			exit(0);
-		}
-		else if (!strcmp(argv[i], "--cascades") || !strcmp(argv[i], "-c"))
-		{
-			if(++i >= argc || !(cascades = atoi(argv[i])))
+
+		case 'c':
+			if(!(cascades = atoi(optarg)))
 			{
-				show_help();
+				help();
 				exit(1);
 			}
-		}
-		else if (!strcmp(argv[i], "--height") || !strcmp(argv[i], "-H"))
-		{
-			if(++i >= argc ||
-				!(first_cascade_height = atoi(argv[i])) ||
-				first_cascade_height < 3)
+			continue;
+
+		case 'H':
+			if(!(first_cascade_height = atoi(optarg))
+				|| first_cascade_height < 3)
 			{
-				show_help();
+				help();
 				exit(1);
 			}
-		}
-		else
-		{
-			show_help();
+			continue;
+
+		case 'g':
+			if (strlen(optarg) > 160)
+			{
+				help();
+				exit(1);
+			}
+			greeting = optarg;
+			continue;
+
+		default:
+			help();
 			exit(1);
 		}
+
+		break;
 	}
 }
 
 int main(int argc, char *argv[])
 {
-	if (argc > 1)
-	{
-		parse_arguments(argc, argv);
-	}
+	parse_options(argc, argv);
 
 	initialize();
 
