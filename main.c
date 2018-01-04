@@ -22,16 +22,16 @@
 
 */
 
-#define RED 			"\e[31m"
-#define GREEN 			"\e[32m"
-#define YELLOW 			"\e[33m"
-#define WHITE 			"\e[37m"
-#define BLACK 			"\e[40m"
-#define GREY			"\e[90m"
-#define BRIGHT_RED 		"\e[91m"
-#define BRIGHT_GREEN 	"\e[92m"
-#define BRIGHT_YELLOW 	"\e[93m"
-#define RESET 			"\e[0m"
+#define RED             "\e[31m"
+#define GREEN           "\e[32m"
+#define YELLOW          "\e[33m"
+#define WHITE           "\e[37m"
+#define BLACK           "\e[40m"
+#define GREY            "\e[90m"
+#define BRIGHT_RED      "\e[91m"
+#define BRIGHT_GREEN    "\e[92m"
+#define BRIGHT_YELLOW   "\e[93m"
+#define RESET           "\e[0m"
 
 typedef enum drawables_t
 {
@@ -79,21 +79,21 @@ const char* drawables_to_string(drawables_t drawable)
 {
 	switch (drawable)
 	{
-		case BACKGROUND:				return " ";
-		case TREE_OUTLINE_SLASH: 		return GREEN"/";
-		case TREE_OUTLINE_BACKSLASH:	return GREEN"\\";
-		case TREE_OUTLINE_UNDERSCORE:	return GREEN"_";
-		case TREE_OUTLINE_TILDE: 		return GREEN"~";
-		case TREE_INLINE:				return GREEN"\u00b7";
-		case TREE_TRUNK_PIPE:			return RED"|";
-		case TREE_TRUNK_UDERSCORE:		return RED"_";
-		case TREE_TOP_LEFT:				return YELLOW"}";
-		case TREE_TOP_RIGHT:			return YELLOW"{";
-		case LED_RED:					return BRIGHT_RED"\u2218";
-		case LED_GREEN:					return BRIGHT_GREEN"\u2218";
-		case LED_YELLOW:				return BRIGHT_YELLOW"\u2218";
-		case SNOWFLAKE_BRIGHT:			return WHITE"*";
-		case SNOWFLAKE_DARK:			return GREY"*";
+		case BACKGROUND:              return " ";
+		case TREE_OUTLINE_SLASH:      return GREEN"/";
+		case TREE_OUTLINE_BACKSLASH:  return GREEN"\\";
+		case TREE_OUTLINE_UNDERSCORE: return GREEN"_";
+		case TREE_OUTLINE_TILDE:      return GREEN"~";
+		case TREE_INLINE:             return GREEN"\u00b7";
+		case TREE_TRUNK_PIPE:         return RED"|";
+		case TREE_TRUNK_UDERSCORE:    return RED"_";
+		case TREE_TOP_LEFT:           return YELLOW"}";
+		case TREE_TOP_RIGHT:          return YELLOW"{";
+		case LED_RED:                 return BRIGHT_RED"\u2218";
+		case LED_GREEN:               return BRIGHT_GREEN"\u2218";
+		case LED_YELLOW:              return BRIGHT_YELLOW"\u2218";
+		case SNOWFLAKE_BRIGHT:        return WHITE"*";
+		case SNOWFLAKE_DARK:          return GREY"*";
 	}
 }
 
