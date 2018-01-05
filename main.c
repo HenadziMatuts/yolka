@@ -66,10 +66,10 @@ typedef enum drawables_t
 
 typedef enum layers_t
 {
-	LAYERS_TREE = 0,
+	LAYERS_TEXT = 0,
 	LAYERS_SNOW,
 	LAYERS_LED,
-	LAYERS_TEXT,
+	LAYERS_TREE,
 	LAYERS_TOTAL
 
 } layers_t;
@@ -101,13 +101,11 @@ const char* drawables_to_string(drawables_t drawable)
 		case TREE_INLINE:             return GREEN"\u00b7";
 		case TREE_TRUNK_PIPE:         return RED"|";
 		case TREE_TRUNK_UDERSCORE:    return RED"_";
-
 		case TREE_PEEK_FRAME_1_LEFT:  return YELLOW"}";
 		case TREE_PEEK_FRAME_1_RIGHT: return YELLOW"{";
 		case TREE_PEEK_FRAME_2:       return YELLOW"\\";
 		case TREE_PEEK_FRAME_3:       return YELLOW"=";
 		case TREE_PEEK_FRAME_4:       return YELLOW"/";
-		
 		case LED_RED:                 return BRIGHT_RED"\u2218";
 		case LED_GREEN:               return BRIGHT_GREEN"\u2218";
 		case LED_YELLOW:              return BRIGHT_YELLOW"\u2218";
@@ -145,17 +143,14 @@ void render()
 			}
 			else if (snow[i][j] != BACKGROUND)
 			{
-				/* snow layer on top */
 				fprintf(stdout, "%s", drawables_to_string(snow[i][j]));
 			}
 			else if (tree[i][j] == TREE_INLINE && led[i][j] != BACKGROUND)
 			{
-				/* led is in the middle */
 				fprintf(stdout, "%s", drawables_to_string(led[i][j]));
 			}
 			else
 			{
-				/* tree itself is on the last layer */
 				fprintf(stdout, "%s", drawables_to_string(tree[i][j]));
 			}
 		}
@@ -249,7 +244,7 @@ bool is_there_are_any_snowlakes_within_the_first_line_of_the_snow_layer()
 	return false;
 }
 
-void new_snowflake()
+void drop_snowflake()
 {
 	drawables_t **snow = layers[LAYERS_SNOW];
 
@@ -275,7 +270,7 @@ void update_snow_layer()
 				{	
 					/* reached the ground */
 					snow[j][i] = SNOWFLAKE_BRIGHT;
-					new_snowflake();
+					drop_snowflake();
 				}
 				else if ((snow[j + 1][i] == BACKGROUND) ||
 					((snow[j + 1][i] != BACKGROUND) &&
